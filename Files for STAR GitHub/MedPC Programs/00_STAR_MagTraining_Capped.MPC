@@ -1,0 +1,115 @@
+\Outputs
+
+^LNP_Light = 1          \Left Nosepoke Port Illumination
+^RNP_Light = 2          \Right Nosepoke Port Illumination
+^Ret_Sipper = 14         \Extension & Retraction of Sipper Pipette
+^White_Noise = 8        \White Noise Generator
+
+\Inputs
+
+^LNP = 1                \Left Nosepoke Response
+^RNP = 2                \Right Nosepoke Response
+^Lick = 3               \Contact Lickometer Response
+
+\Variables
+
+\A = Right Nosepoke Counter
+\B = Left Nosepoke Counter
+\C
+\D
+\E = Lick Onset Counter
+\F = Lick Offset Counter
+\G
+\H
+\I
+SEALED_ARRAY J = 5000     \Right Nosepoke Timestamp Array
+SEALED_ARRAY K = 5000     \Left Nosepoke Timestamp Array
+\L
+\M
+SEALED_ARRAY N = 5000     \Lick Onset Timestamp Array
+SEALED_ARRAY O = 5000     \Lick Offset Timestamp Array
+\P
+\Q
+\R
+\S
+\T = Session Timer
+\U
+\V
+\W
+\X
+\Y = Lickometer Tracker (Tracks discrete lick events)
+\Z
+
+S.S.1,
+
+S1,
+
+    0.01": OFF ^Ret_Sipper ---> S2 \Sipper retracted when session is loaded
+
+S2,
+
+    #START: ON ^Ret_Sipper, ^White_Noise ---> S3 \White noise begins and sipper extended upon session start
+
+S3,
+
+    #R^Lick: ADD Y; IF Y >= 2 [@Lick, @NoLick] \Determines if discrete lick has been initiated
+                 @Lick: Z1; SET Y = 0 ---> S4
+                 @NoLick: ---> SX
+
+    0.02": SET Y = 0 ---> S3
+
+S4,
+
+    0.02": Z2 ---> S3 \Determines if discrete lick has ended
+
+    #R^Lick: ---> S4
+
+S.S.2,
+
+S1,
+
+    #Z1: SET N(E) = T; ADD E ---> S1 \Lick onset counted and timestamped
+
+S.S.3,
+
+S1,
+
+    #Z2: SET O(F) = T; ADD F; IF F < 100 [@CONT, @STOP] \Lick offset counted and timestamped
+                 @CONT: ---> S1
+                 @STOP: OFF ^Ret_Sipper ---> S2
+
+S2,
+
+    .02": ---> STOPSAVE \Session ended when 100 lick cap is met
+
+S.S.4,
+
+S1,
+
+    #START ---> S2
+
+S2,
+
+    0.01": SET T = T + 0.01; SHOW 1, Right NP, A, 2, Left NP, B, 3, Lick Onset, E, 4, Lick Offset, F, 5, Timer, T ---> SX \Displays updated variable values during session
+
+S.S.5,
+
+S1,
+
+    #START ---> S2
+
+S2,
+
+    #R^RNP: SET J(A) = T; ADD A ---> SX \Right NP counted and timestamped
+    #R^LNP: SET K(B) = T; ADD B ---> SX \Left NP counted and timestamped
+
+S.S.6,
+
+S1,
+
+    #START ---> S2
+
+S2,
+
+    60' ---> STOPSAVE \Session ended after 60 minutes if 100 lick cap is not met
+

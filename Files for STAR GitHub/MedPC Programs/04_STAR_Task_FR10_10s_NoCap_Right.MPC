@@ -1,0 +1,118 @@
+\Outputs
+
+^LNP_Light = 1          \Left Nosepoke Port Illumination
+^RNP_Light = 2          \Right Nosepoke Port Illumination
+^Ret_Sipper = 14         \Extension & Retraction of Sipper Pipette
+^White_Noise = 8        \White Noise Generator
+
+\Inputs
+
+^LNP = 1                \Left Nosepoke Response
+^RNP = 2                \Right Nosepoke Response
+^Lick = 3               \Contact Lickometer Response
+
+\Variables (Active - Right NP; Inactive - Left NP)
+
+\A = Active FR Nosepoke Counter    (NP response when sipper retracted & NP ports illuminated)
+\B = Inactive FR Nosepoke Counter  (NP response when sipper retracted & NP ports illuminated)
+\C = Active Ext Nosepoke Counter   (NP response during 10s sipper extension)
+\D = Inactive Ext Nosepoke Counter (NP response during 10s sipper extension)
+\E = Lick Onset Counter
+\F = Lick Offset Counter
+\G = Fixed Ratio Nosepoke Tracker
+\H = Sipper Extension Counter
+\I
+SEALED_ARRAY J = 5000     \Active FR Nosepoke Timestamp Array
+SEALED_ARRAY K = 5000     \Inactive FR Nosepoke Timestamp Array
+SEALED_ARRAY L = 5000     \Active Ext Nosepoke Timestamp Array
+SEALED_ARRAY M = 5000     \Inactive Ext Nosepoke Timestamp Array
+SEALED_ARRAY N = 5000     \Lick Onset Timestamp Array
+SEALED_ARRAY O = 5000     \Lick Offset Timestamp Array
+SEALED_ARRAY P = 5000     \Sipper Extension Timestamp Array
+\Q
+\R
+\S
+\T = Session Timer
+\U
+\V
+\W
+\X
+\Y = Lickometer Tracker (Tracks discrete lick events)
+\Z
+
+S.S.1,
+
+S1,
+
+    0.01": OFF ^Ret_Sipper ---> S2 \Sipper retracts when session is loaded
+
+S2,
+
+    #START: ON ^White_Noise, ^LNP_Light, ^RNP_Light ---> S3 \White noise begins and NP ports illuminated upon session start
+
+S3,
+
+    #R^RNP: SET J(A) = T; ADD A, G; IF G = 10 [@EXT, @NOEXT] \Active FR NP counted and timestamped
+                 @EXT: ON ^Ret_Sipper; OFF ^LNP_Light, ^RNP_Light; SET P(H) = T, G = 0; ADD H ---> S4 \Sipper extended upon FR10 completion, sipper extension counted and timestamped, NP port illumination ceased
+                 @NOEXT: ---> SX
+
+    #R^LNP: SET K(B) = T; ADD B ---> SX \Inactive FR NP counted and timestamped
+
+S4,
+
+    10": OFF ^Ret_Sipper; ON ^LNP_Light, ^RNP_Light ---> S3 \Sipper retracted and NP ports re-illuminated
+
+    #R^RNP: SET L(C) = T; ADD C ---> SX \Active Ext NP counted and timestamped
+    #R^LNP: SET M(D) = T; ADD D ---> SX \Inactive Ext NP counted and timestamped
+
+S.S.2,
+
+S1,
+
+    #START: ---> S2
+
+S2,
+
+    #R^Lick: ADD Y; IF Y >= 2 [@Lick, @NoLick] \Determines if discrete lick has been initiated
+                 @Lick: Z1; SET Y = 0 ---> S3
+                 @NoLick: ---> SX
+
+    0.02": SET Y = 0 ---> S2
+
+S3,
+
+    0.02": Z2 ---> S2 \Determines if discrete lick has ended
+
+    #R^Lick: ---> S3
+
+S.S.3,
+
+S1,
+
+    #Z1: SET N(E) = T; ADD E ---> S1 \Lick onset counted and timestamped
+
+S.S.4,
+
+S1,
+
+    #Z2: SET O(F) = T; ADD F ---> SX \Lick offset counted and timestamped
+
+S.S.5,
+
+S1,
+
+    #START ---> S2
+
+S2,
+
+    0.01": SET T = T + 0.01; SHOW 1, Active FP, A, 2, Inactive FP, B, 3, Active Ext, C, 4, Inactive Ext, D, 5, Lick Onset, E, 6, Lick Offset, F, 7, FR Tracker, G, 8, Sip Extensions, H, 9, Timer, T ---> SX \Displays updated variable values during session
+
+S.S.6,
+
+S1,
+
+    #START ---> S2
+
+S2,
+
+    60' ---> STOPSAVE \Session ended after 60 minutes
