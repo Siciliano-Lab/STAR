@@ -1,0 +1,88 @@
+\Outputs
+
+^House_Light = 7
+^Dispenser = 14
+^LNP_Light = 1
+^RNP_Light = 2
+\^Dip_Light =
+^Left_Light = 4
+^Right_Light = 5
+^Tone1 = 9
+^Tone2 = 10
+^Tone3 = 11
+^Tone4 = 12
+^White_Noise = 8
+^Shock = 13
+
+
+\Inputs
+
+^LNP = 1
+^RNP = 2
+^Lick = 3
+
+\Variable
+
+\A = Active Nosepoke (Right)
+\B = Inactive Nosepoke (Left)
+\C
+\D
+\E
+\F
+\G
+\H
+\I
+SEALED_ARRAY J = 2000     \Active Nosepoke (Right) Timestamp
+SEALED_ARRAY K = 2000     \Inactive Nosepoke (Left) Timestamp
+\L
+\M
+\N
+\O
+\P
+\Q
+\R
+\S
+\T = Session Timer
+\U
+\V
+\W
+\X
+\Y
+\Z
+
+S.S.1,
+
+S1,
+
+    0.01": OFF ^Dispenser ---> S2
+
+S2,
+    #START: ON ^White_Noise, ^LNP_Light, ^RNP_Light; OFF ^Dispenser ---> S3
+
+S3,
+
+    #R^RNP: SET J(A) = T; ADD A ---> SX
+    #R^LNP: SET K(B) = T; ADD B ---> SX
+
+S.S.2,
+
+S1,
+
+    #START ---> S2
+
+S2,
+
+    0.01": SET T = T + 0.01; SHOW 1, Active, A, 2, Inactive, B, 3, Timer, T ---> SX
+
+S.S.3,
+
+S1,
+
+    #START ---> S2
+
+S2,
+
+    60' ---> STOPSAVE
+
+
+
