@@ -1,0 +1,3 @@
+The files in this folder are a modified version of the original STAR code. The differences are:
+  1. This code is for use with retractable levers.
+  2. There is no lick cap for the acquisition tasks. Thus the programs will run for the full hour no matter how many licks are made.
